@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corujinha Matemática</title>
+    <style>
+        :root {
+            --bg1: #f6f9ff;
+            --card: #ffffff;
+            --accent: #ffaf7a;
+            --accent2: #6fcf97;
+            --muted: #6b7280;
+            --shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+            --text: #102a43;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #e8f0ff 0%, #fef2f2 100%);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 980px;
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #eef2ff;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 28px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            color: var(--accent2);
+        }
+
+        .hud {
+            display: flex;
+            gap: 18px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .main {
+            padding: 18px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.9));
+            padding: 18px;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(20, 20, 40, 0.03);
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        input, textarea, select {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e6eef8;
+            font-size: 15px;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 0;
+            background: var(--accent);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn.ghost {
+            background: transparent;
+            color: #184a2c;
+            border: 2px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .btn.primary {
+            background: var(--accent2);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 2px solid #cde;
+            background: #0a1128;
+        }
+
+        .small-instr {
+            margin-top: 8px;
+            color: var(--muted);
+        }
+
+        .summaryBox {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #eef2ff;
+            height: 220px;
+            overflow: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+
+        .footer {
+            padding: 12px 18px;
+            border-top: 1px solid #eef2ff;
+            background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.6));
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        #form-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header class="topbar">
+            <div class="brand">
+                <span class="logo">🦉</span>
+                <h1>Corujinha Matemática</h1>
+            </div>
+            <div class="hud">
+                <div>Vidas: <span id="lives">10</span></div>
+                <div>Nivel: <span id="level">1</span></div>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- INTRO / CONFIG -->
+            <section id="intro" class="card">
+                <h2>Bem-vindo!</h2>
+                <p>Ajude a Corujinha a resolver as contas da tabuada coletando os resultados corretos e desviando dos foguinhos!</p>
+                <label class="field">
+                    Seu e-mail:
+                    <input id="studentEmail" type="email" placeholder="aluno@escola.com">
+                </label>
+                <div class="controls-row">
+                    <label class="field">
+                        Nivel inicial:
+                        <select id="startLevel"></select>
+                    </label>
+                    <button id="btnStart" class="btn primary">Iniciar Jogo</button>
+                </div>
+                <small class="muted">Ao concluir cada nivel aparecerá um resumo que você pode enviar ao professor.</small>
+            </section>
+
+            <!-- ÁREA DO JOGO -->
+            <section id="gameArea" class="card hidden">
+                <div style="position: relative;">
+                    <canvas id="gameCanvas" width="820" height="460"></canvas>
+                    <div id="gameOverScreen" class="game-over hidden">
+                        <h2>Game Over!</h2>
+                        <p>Você perdeu todas as vidas.</p>
+                        <button id="restartBtn" class="btn primary">Tentar Novamente</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RESUMO / ENVIO -->
+            <section id="summary" class="card hidden">
+                <h2>Resumo do nível</h2>
+                <pre id="summaryText" class="summaryBox">--</pre>
+                <form id="emailForm">
+                    <label class="field">
+                        Confirmar seu e-mail:
+                        <input id="formStudentEmail" name="email" type="email" required>
+                    </label>
+                    <input type="hidden" id="formMessage" name="message">
+                    <div class="controls-row">
+                        <button id="sendMailBtn" class="btn primary" type="submit">Enviar ao professor</button>
+                        <button id="closeSummary" class="btn ghost" type="button">Fechar</button>
+                    </div>
+                    <small class="muted">O e-mail será enviado para <strong>gabrieli.rizzi.cruz@escola.pr.gov.br</strong></small>
+                </form>
+                <div id="form-message" class="hidden"></div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <small class="muted">Ajude a Corujinha a resolver a tabuada!</small>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const PROFESSOR_EMAIL = "gabrieli.rizzi.cruz@escola.pr.gov.br";
+            const TOTAL_LEVELS = 10;
+
+            // DOM Elements
+            const studentEmailEl = document.getElementById("studentEmail");
+            const startLevelEl = document.getElementById("startLevel");
+            const btnStart = document.getElementById("btnStart");
+            const gameArea = document.getElementById("gameArea");
+            const livesEl = document.getElementById("lives");
+            const levelEl = document.getElementById("level");
+            const summary = document.getElementById("summary");
+            const summaryText = document.getElementById("summaryText");
+            const formStudentEmail = document.getElementById("formStudentEmail");
+            const formMessageEl = document.getElementById("formMessage");
+            const emailForm = document.getElementById("emailForm");
+            const closeSummary = document.getElementById("closeSummary");
+            const canvas = document.getElementById("gameCanvas");
+            const ctx = canvas.getContext("2d");
+            const gameOverScreen = document.getElementById("gameOverScreen");
+            const restartBtn = document.getElementById("restartBtn");
+            const messageDiv = document.getElementById("form-message");
+
+            // Game state
+            let state = {
+                running: false,
+                studentEmail: "",
+                level: 1,
+                score: 0,
+                lives: 10,
+                questions: [],
+                logs: [],
+                wrongAnswers: [],
+                currentQuestion: null,
+                currentAnswer: null,
+                gameObjects: {
+                    platforms: [],
+                    stars: [],
+                    enemies: [],
+                    player: null,
+                    tree: null
+                },
+                keys: {},
+                stars: [], // Para as estrelas do céu
+                invulnerable: 0, // Tempo de invulnerabilidade após levar dano
+                lastHitTime: 0 // Último momento em que levou dano
+            };
+
+            // Game constants
+            const W = 820, H = 460;
+            const gravity = 0.8;
+            
+            // Player (Coruja) - MODIFICADO: posicionado mais à esquerda
+            const player = { 
+                x: 30, y: 200, w: 36, h: 36, // Começa mais à esquerda (x: 30)
+                vx: 0, vy: 0, speed: 5, jump: 12, 
+                onGround: true, dir: 1 
+            };
+
+            // Build level options
+            for (let i = 1; i <= TOTAL_LEVELS; i++) {
+                const o = document.createElement("option");
+                o.value = i;
+                o.textContent = i;
+                startLevelEl.appendChild(o);
+            }
+
+            function generateQuestionsForLevel(n) {
+                // Gera todas as 10 contas da tabuada do número n, mas em ordem aleatória
+                const questions = [];
+                for (let i = 1; i <= 10; i++) {
+                    questions.push({ a: i, b: n, answer: i * n });
+                }
+                
+                // Embaralha as perguntas
+                for (let i = questions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [questions[i], questions[j]] = [questions[j], questions[i]];
+                }
+                
+                return questions;
+            }
+
+            function createLevel(level) {
+                // Clear previous level
+                state.gameObjects = {
+                    platforms: [],
+                    stars: [],
+                    enemies: [],
+                    player: player,
+                    tree: null
+                };
+
+                // Ground
+                state.gameObjects.platforms.push({x: 0, y: H - 40, w: W, h: 40});
+
+                // Create more platforms to reach all results (wider platforms)
+                state.gameObjects.platforms.push({x: 150, y: H - 100, w: 120, h: 20});
+                state.gameObjects.platforms.push({x: 290, y: H - 140, w: 120, h: 20});
+                state.gameObjects.platforms.push({x: 430, y: H - 100, w: 120, h: 20});
+                state.gameObjects.platforms.push({x: 570, y: H - 160, w: 120, h: 20});
+                state.gameObjects.platforms.push({x: 710, y: H - 120, w: 120, h: 20});
+                state.gameObjects.platforms.push({x: 170, y: H - 200, w: 120, h: 20});
+                state.gameObjects.platforms.push({x: 350, y: H - 240, w: 120, h: 20});
+                state.gameObjects.platforms.push({x: 530, y: H - 200, w: 120, h: 20});
+                state.gameObjects.platforms.push({x: 710, y: H - 240, w: 120, h: 20});
+                state.gameObjects.platforms.push({x: 370, y: H - 280, w: 120, h: 20});
+
+                // Stars (correct answers) - uma para cada resultado
+                const answerPositions = [
+                    {x: 200, y: H - 130}, {x: 340, y: H - 170}, {x: 470, y: H - 130},
+                    {x: 620, y: H - 190}, {x: 760, y: H - 150}, {x: 220, y: H - 230},
+                    {x: 400, y: H - 270}, {x: 580, y: H - 230}, {x: 760, y: H - 270},
+                    {x: 420, y: H - 310}
+                ];
+                
+                state.questions.forEach((q, i) => {
+                    if (i < answerPositions.length) {
+                        const pos = answerPositions[i];
+                        state.gameObjects.stars.push({
+                            x: pos.x, y: pos.y, w: 30, h: 30, 
+                            value: q.answer, 
+                            collected: false,
+                            blink: 0 // Para controlar o efeito de piscar
+                        });
+                    }
+                });
+
+                // Create enemies (foguinhos) - removido o inimigo problemático
+                const enemyPositions = [
+                    {x: 500, y: H - 70}, {x: 600, y: H - 70}, {x: 700, y: H - 70},
+                    {x: 400, y: H - 170}, {x: 550, y: H - 170},
+                    {x: 650, y: H - 210}, {x: 400, y: H - 270}, {x: 600, y: H - 270},
+                    {x: 450, y: H - 310}
+                ];
+                
+                for (let i = 0; i < enemyPositions.length; i++) {
+                    const pos = enemyPositions[i];
+                    state.gameObjects.enemies.push({
+                        x: pos.x, y: pos.y, w: 30, h: 30,
+                        dir: i % 2 === 0 ? 1 : -1,
+                        speed: 3, // Velocidade fixa para todos os níveis
+                        platform: i >= 4, // Apenas alguns estão em plataformas
+                        active: true
+                    });
+                }
+
+                // Tree (end of level) - MODIFICADO: agora posicionada após a coruja
+                state.gameObjects.tree = {x: 120, y: H - 160, w: 80, h: 120};
+                
+                // Create stars for the night sky
+                state.stars = [];
+                for (let i = 0; i < 100; i++) {
+                    state.stars.push({
+                        x: Math.random() * W,
+                        y: Math.random() * (H - 100),
+                        size: Math.random() * 2 + 1,
+                        opacity: Math.random() * 0.5 + 0.5,
+                        twinkleSpeed: Math.random() * 0.05 + 0.02
+                    });
+                }
+                
+                // Position player safely on the far left side - MODIFICADO: mais à esquerda
+                player.x = 30;
+                player.y = H - 130;
+                player.vy = 0;
+                player.onGround = true;
+                
+                // Reset invulnerability
+                state.invulnerable = 0;
+                state.lastHitTime = 0;
+            }
+
+            function startLevel(level) {
+                state.running = true;
+                state.level = level;
+                state.score = 0;
+                state.lives = 10;
+                state.questions = generateQuestionsForLevel(level);
+                state.logs = [];
+                state.wrongAnswers = [];
+                
+                createLevel(level);
+                updateHUD();
+                nextQuestion();
+                
+                document.getElementById("intro").classList.add("hidden");
+                gameArea.classList.remove("hidden");
+                summary.classList.add("hidden");
+                gameOverScreen.classList.add("hidden");
+                
+                // Start game loop
+                requestAnimationFrame(gameLoop);
+            }
+
+            function nextQuestion() {
+                // Find the next unanswered question
+                const unanswered = state.questions.filter(q => 
+                    !state.logs.some(log => log.includes(`${q.a}×${q.b}`))
+                );
+                
+                if (unanswered.length === 0) {
+                    showSummary();
+                    return;
+                }
+
+                state.currentQuestion = unanswered[0];
+                state.currentAnswer = state.currentQuestion.answer;
+            }
+
+            function updateHUD() {
+                livesEl.textContent = state.lives;
+                levelEl.textContent = state.level;
+            }
+
+            function showSummary() {
+                state.running = false;
+                gameArea.classList.add("hidden");
+                summary.classList.remove("hidden");
+
+                const acertos = state.logs.filter(l => l.includes("✓")).length;
+                const resumo = [
+                    `Aluno: ${state.studentEmail}`,
+                    `Nivel: ${state.level}`,
+                    `Tabuada do: ${state.level}`,
+                    `Acertos: ${acertos}/${state.questions.length}`,
+                    `Tentativas erradas: ${state.wrongAnswers.length}`,
+                    `Pontuação: ${state.score}`,
+                    '',
+                    'Respostas corretas:',
+                    ...state.logs,
+                    '',
+                    'Tentativas erradas:',
+                    ...(state.wrongAnswers.length > 0 ? 
+                        state.wrongAnswers : 
+                        ['Nenhuma tentativa errada!']
+                    )
+                ].join("\n");
+
+                summaryText.textContent = resumo;
+                formStudentEmail.value = state.studentEmail;
+                formMessageEl.value = resumo;
+            }
+
+            function showGameOver() {
+                state.running = false;
+                gameOverScreen.classList.remove("hidden");
+            }
+
+            // Input handling
+            window.addEventListener("keydown", e => {
+                state.keys[e.key] = true;
+            });
+
+            window.addEventListener("keyup", e => {
+                state.keys[e.key] = false;
+            });
+
+            // Game physics and rendering
+            function gameLoop(timestamp) {
+                if (!state.running) return;
+                
+                // Update invulnerability timer
+                if (state.invulnerable > 0) {
+                    state.invulnerable -= 16.7; // Approximately 1 frame at 60fps
+                }
+                
+                // Update star blink timers
+                state.gameObjects.stars.forEach(star => {
+                    if (star.blink > 0) {
+                        star.blink -= 16.7;
+                    }
+                });
+                
+                update();
+                render(timestamp);
+                
+                requestAnimationFrame(gameLoop);
+            }
+
+            function update() {
+                // Handle input
+                const left = state.keys["ArrowLeft"] || state.keys["a"] || state.keys["A"];
+                const right = state.keys["ArrowRight"] || state.keys["d"] || state.keys["D"];
+                const jump = state.keys["ArrowUp"] || state.keys["w"] || state.keys["W"] || state.keys[" "];
+
+                // Horizontal movement
+                if (left && !right) {
+                    player.vx = -player.speed;
+                    player.dir = -1;
+                } else if (right && !left) {
+                    player.vx = player.speed;
+                    player.dir = 1;
+                } else {
+                    player.vx = 0;
+                }
+
+                // Jump
+                if (jump && player.onGround) {
+                    player.vy = -player.jump;
+                    player.onGround = false;
+                }
+
+                // Apply gravity
+                player.vy += gravity;
+
+                // Update position
+                player.x += player.vx;
+                player.y += player.vy;
+
+                // Check platform collisions
+                player.onGround = false;
+                for (const platform of state.gameObjects.platforms) {
+                    if (player.x < platform.x + platform.w &&
+                        player.x + player.w > platform.x &&
+                        player.y < platform.y + platform.h &&
+                        player.y + player.h > platform.y) {
+                        
+                        // Collision from top
+                        if (player.vy > 0 && player.y + player.h - player.vy <= platform.y) {
+                            player.y = platform.y - player.h;
+                            player.vy = 0;
+                            player.onGround = true;
+                        }
+                    }
+                }
+
+                // Boundary checks
+                if (player.x < 0) player.x = 0;
+                if (player.x + player.w > W) player.x = W - player.w;
+                if (player.y > H) {
+                    // Fell off the screen
+                    player.y = 100;
+                    player.vy = 0;
+                    state.lives--;
+                    updateHUD();
+                    
+                    if (state.lives <= 0) {
+                        showGameOver();
+                    }
+                }
+
+                // Update enemies
+                for (const enemy of state.gameObjects.enemies) {
+                    // Skip inactive enemies
+                    if (!enemy.active) continue;
+                    
+                    enemy.x += enemy.speed * enemy.dir;
+                    
+                    // MODIFICADO: Inimigos não podem ultrapassar a árvore na esquerda
+                    const treeRight = state.gameObjects.tree.x + state.gameObjects.tree.w;
+                    if (enemy.x < treeRight + 20) {
+                        enemy.dir = 1; // Força o inimigo a ir para a direita
+                        enemy.x = treeRight + 20; // Mantém o inimigo à direita da árvore
+                    }
+                    
+                    // Reverse direction at boundaries
+                    if ((enemy.platform && (enemy.x < treeRight + 20 || enemy.x > W - 80)) ||
+                        (!enemy.platform && (enemy.x < treeRight + 20 || enemy.x > W - 80))) {
+                        enemy.dir *= -1;
+                    }
+                    
+                    // Check collision with player (only if not invulnerable)
+                    if (state.invulnerable <= 0 &&
+                        player.x < enemy.x + enemy.w &&
+                        player.x + player.w > enemy.x &&
+                        player.y < enemy.y + enemy.h &&
+                        player.y + player.h > enemy.y) {
+                        
+                        // MODIFICADO: Verifica se o jogador está caindo sobre o inimigo (para matá-lo)
+                        if (player.vy > 0 && player.y + player.h - player.vy <= enemy.y) {
+                            // Player pulou em cima do inimigo - mata o inimigo
+                            enemy.active = false;
+                            player.vy = -player.jump * 0.7; // Pequeno salto ao matar
+                            state.score += 20; // Pontuação por matar inimigo
+                        } else {
+                            // Player hurt - lose one life per enemy
+                            state.lives--;
+                            updateHUD();
+                            
+                            // Set invulnerability for 5 seconds (5000ms)
+                            state.invulnerable = 5000;
+                            state.lastHitTime = Date.now();
+                            
+                            if (state.lives <= 0) {
+                                showGameOver();
+                            }
+                        }
+                    }
+                }
+
+                // Check star collection
+                for (const star of state.gameObjects.stars) {
+                    if (!star.collected && 
+                        player.x < star.x + star.w &&
+                        player.x + player.w > star.x &&
+                        player.y < star.y + star.h &&
+                        player.y + player.h > star.y) {
+                        
+                        if (state.currentAnswer === star.value) {
+                            // Correct answer collected
+                            star.collected = true;
+                            state.score += 50;
+                            state.logs.push(`${state.currentQuestion.a}×${state.currentQuestion.b} = ${star.value} -> ✓`);
+                            nextQuestion();
+                        } else {
+                            // Wrong answer - make the star blink red
+                            star.blink = 1000; // 1 second blink
+                            
+                            // Register wrong answer attempt
+                            const wrongAttempt = `${state.currentQuestion.a}×${state.currentQuestion.b} = ${star.value} -> ✗`;
+                            if (!state.wrongAnswers.includes(wrongAttempt)) {
+                                state.wrongAnswers.push(wrongAttempt);
+                            }
+                        }
+                    }
+                }
+
+                // Check if reached tree (end of level)
+                if (player.x < state.gameObjects.tree.x + state.gameObjects.tree.w &&
+                    player.x + player.w > state.gameObjects.tree.x &&
+                    player.y < state.gameObjects.tree.y + state.gameObjects.tree.h &&
+                    player.y + player.h > state.gameObjects.tree.y) {
+                    
+                    // Check if all stars collected
+                    const allCollected = state.gameObjects.stars.every(s => s.collected);
+                    if (allCollected) {
+                        showSummary();
+                    }
+                }
+            }
+
+            function render(timestamp) {
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw night sky background
+                const skyGradient = ctx.createLinearGradient(0, 0, 0, H);
+                skyGradient.addColorStop(0, '#0a1128');
+                skyGradient.addColorStop(1, '#1a237e');
+                ctx.fillStyle = skyGradient;
+                ctx.fillRect(0, 0, W, H);
+                
+                // Draw twinkling stars
+                state.stars.forEach(star => {
+                    const twinkle = Math.sin(timestamp * star.twinkleSpeed) * 0.3 + 0.7;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity * twinkle})`;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                
+                // Draw moon
+                ctx.fillStyle = '#f5f5f5';
+                ctx.beginPath();
+                ctx.arc(700, 80, 40, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#e0e0e0';
+                ctx.beginPath();
+                ctx.arc(680, 60, 8, 0, Math.PI * 2);
+                ctx.arc(720, 70, 5, 0, Math.PI * 2);
+                ctx.arc(710, 100, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw platforms (wider platforms)
+                ctx.fillStyle = "#885A2B";
+                for (const platform of state.gameObjects.platforms) {
+                    ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
+                    ctx.strokeStyle = "#6b4019";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(platform.x, platform.y, platform.w, platform.h);
+                }
+                
+                // Draw stars (answers) - piscam vermelho quando errado
+                for (const star of state.gameObjects.stars) {
+                    if (!star.collected) {
+                        // Se a estrela está piscando (resposta errada)
+                        if (star.blink > 0) {
+                            const blinkIntensity = Math.sin(timestamp * 0.01) * 0.5 + 0.5;
+                            ctx.fillStyle = `rgba(255, 0, 0, ${blinkIntensity})`;
+                        } else {
+                            ctx.fillStyle = "#ffd166"; // Cor normal
+                        }
+                        
+                        drawStar(ctx, star.x + star.w/2, star.y + star.h/2, 5, 15, 7);
+                        
+                        // Draw the value inside the star
+                        ctx.fillStyle = "#000";
+                        ctx.font = "12px Arial";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText(star.value, star.x + star.w/2, star.y + star.h/2);
+                    }
+                }
+                
+                // Draw enemies (foguinhos) - apenas os ativos
+                for (const enemy of state.gameObjects.enemies) {
+                    if (enemy.active && enemy.x > -50) { // Only draw if active and on screen
+                        drawFireEnemy(ctx, enemy.x, enemy.y, enemy.w, enemy.h);
+                    }
+                }
+                
+                // Draw tree (end of level) - MODIFICADO: agora posicionada após a coruja
+                drawTree(ctx, state.gameObjects.tree.x, state.gameObjects.tree.y, state.gameObjects.tree.w, state.gameObjects.tree.h);
+                
+                // Draw player (coruja) with blinking effect when invulnerable
+                if (state.invulnerable <= 0 || Math.floor(state.invulnerable / 200) % 2 === 0) {
+                    drawOwlPlayer(ctx, player.x, player.y, player.w, player.h, player.dir);
+                }
+                
+                // Draw current question above player
+                if (state.currentQuestion) {
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "16px Arial";
+                    ctx.textAlign = "center";
+                    ctx.fillText(`${state.currentQuestion.a} × ${state.currentQuestion.b} = ?`, player.x + player.w/2, player.y - 20);
+                }
+                
+                // Draw invulnerability timer if active
+                if (state.invulnerable > 0) {
+                    const secondsLeft = Math.ceil(state.invulnerable / 1000);
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "14px Arial";
+                    ctx.textAlign = "right";
+                    ctx.fillText(`Invulnerável: ${secondsLeft}s`, W - 10, 20);
+                }
+            }
+
+            function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+                let rot = Math.PI / 2 * 3;
+                let x = cx;
+                let y = cy;
+                let step = Math.PI / spikes;
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - outerRadius);
+
+                for (let i = 0; i < spikes; i++) {
+                    x = cx + Math.cos(rot) * outerRadius;
+                    y = cy + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += step;
+
+                    x = cx + Math.cos(rot) * innerRadius;
+                    y = cy + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += step;
+                }
+
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = "#c78f19";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            function drawFireEnemy(ctx, x, y, w, h) {
+                // Fire base
+                ctx.fillStyle = '#ff4422';
+                ctx.beginPath();
+                ctx.arc(x + w/2, y + h/2, w/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Fire flames
+                ctx.fillStyle = '#ffaa00';
+                ctx.beginPath();
+                ctx.moveTo(x + w/2, y + h/4);
+                ctx.lineTo(x + w/4, y + h);
+                ctx.lineTo(x + w/2, y + h/2);
+                ctx.lineTo(x + 3*w/4, y + h);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Fire highlights
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.arc(x + w/2, y + h/3, w/6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Eyes
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(x + w/3, y + h/3, 3, 0, Math.PI * 2);
+                ctx.arc(x + 2*w/3, y + h/3, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            function drawTree(ctx, x, y, w, h) {
+                // Trunk
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(x + w/2 - 10, y + h/2, 20, h/2);
+                
+                // Leaves
+                ctx.fillStyle = '#2E8B57';
+                ctx.beginPath();
+                ctx.arc(x + w/2, y + h/4, w/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(x + w/2 - 15, y + h/3, w/3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(x + w/2 + 15, y + h/3, w/3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            function drawOwlPlayer(ctx, x, y, w, h, dir) {
+                ctx.save();
+                if (dir < 0) {
+                    ctx.scale(-1, 1);
+                    ctx.translate(-x * 2 - w, 0);
+                }
+                
+                // Body
+                ctx.fillStyle = "#6b556b";
+                ctx.beginPath();
+                ctx.ellipse(x + w/2, y + h/2, w/2, h/2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Eyes
+                ctx.fillStyle = "#fff";
+                ctx.beginPath();
+                ctx.arc(x + w/3, y + h/3, w/6, 0, Math.PI * 2);
+                ctx.arc(x + 2*w/3, y + h/3, w/6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Pupils
+                ctx.fillStyle = "#000";
+                ctx.beginPath();
+                ctx.arc(x + w/3, y + h/3, w/12, 0, Math.PI * 2);
+                ctx.arc(x + 2*w/3, y + h/3, w/12, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Beak
+                ctx.fillStyle = "#ffaf7a";
+                ctx.beginPath();
+                ctx.moveTo(x + w/2 - w/8, y + h/2);
+                ctx.lineTo(x + w/2 + w/8, y + h/2);
+                ctx.lineTo(x + w/2, y + 2*h/3);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.restore();
+            }
+
+            // Event listeners
+            btnStart.addEventListener("click", () => {
+                if (!studentEmailEl.value) {
+                    alert("Por favor, informe seu e-mail antes de começar!");
+                    return;
+                }
+                
+                state.studentEmail = studentEmailEl.value;
+                startLevel(parseInt(startLevelEl.value));
+            });
+
+            closeSummary.addEventListener("click", () => {
+                summary.classList.add("hidden");
+                document.getElementById("intro").classList.remove("hidden");
+            });
+
+            restartBtn.addEventListener("click", () => {
+                startLevel(state.level);
+            });
+
+            // Form submission handler
+            emailForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                
+                const submitBtn = document.getElementById("sendMailBtn");
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Enviando...";
+                
+                try {
+                    // Use FormSubmit.co to send the email
+                    const formData = new FormData(emailForm);
+                    formData.append("_subject", `Resultado da Corujinha Matemática - Nível ${state.level}`);
+                    formData.append("_template", "table");
+                    formData.append("_cc", state.studentEmail);
+                    
+                    const response = await fetch("https://formsubmit.co/ajax/" + PROFESSOR_EMAIL, {
+                        method: "POST",
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        messageDiv.textContent = "Relatório enviado com sucesso!";
+                        messageDiv.className = "success";
+                        messageDiv.classList.remove("hidden");
+                    } else {
+                        throw new Error("Falha no envio");
+                    }
+                } catch (error) {
+                    messageDiv.textContent = "Erro ao enviar. Tente novamente mais tarde.";
+                    messageDiv.className = "error";
+                    messageDiv.classList.remove("hidden");
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Enviar ao professor";
+                    
+                    // Hide message after 5 seconds
+                    setTimeout(() => {
+                        messageDiv.classList.add("hidden");
+                    }, 5000);
+                }
+            });
+
+            // Initialize
+            updateHUD();
+        });
+    </script>
+</body>
+</html>
