@@ -305,27 +305,28 @@
 
             // Game state
             let state = {
-                running: false,
-                studentEmail: "",
-                level: 1,
-                score: 0,
-                lives: 10,
-                questions: [],
-                logs: [],
-                wrongAnswers: [],
-                currentQuestion: null,
-                currentAnswer: null,
-                gameObjects: {
-                    platforms: [],
-                    stars: [],
-                    enemies: [],
-                    player: null,
-                    tree: null
-                },
-                keys: {},
-                stars: [], // Para as estrelas do céu
-                invulnerable: 0, // Tempo de invulnerabilidade após levar dano
-                lastHitTime: 0 // Último momento em que levou dano
+            running: false,
+            studentEmail: "",
+            level: 1,
+            score: 0,
+            lives: 10,
+            killedEnemies: 0, // 👈 NOVO contador de inimigos derrotados
+            questions: [],
+            logs: [],
+            wrongAnswers: [],
+            currentQuestion: null,
+            currentAnswer: null,
+            gameObjects: {
+                platforms: [],
+                stars: [],
+                enemies: [],
+                player: null,
+                tree: null
+            },
+            keys: {},
+            stars: [], // Para as estrelas do céu
+            invulnerable: 0, // Tempo de invulnerabilidade após levar dano
+            lastHitTime: 0 // Último momento em que levou dano
             };
 
             // Game constants
@@ -491,8 +492,8 @@
             }
 
             function updateHUD() {
-                livesEl.textContent = state.lives;
-                levelEl.textContent = state.level;
+            livesEl.textContent = `${state.lives}/10`; // 👈 mostra no formato atual/total
+            levelEl.textContent = state.level;
             }
 
             function showSummary() {
@@ -507,8 +508,8 @@
                     `Tabuada do: ${state.level}`,
                     `Acertos: ${acertos}/${state.questions.length}`,
                     `Tentativas erradas: ${state.wrongAnswers.length}`,
-                    `Pontuação: ${state.score}`,
-                    `Vidas: ${state.lives}`,
+                    `Oponentes derrotados: ${state.killedEnemies}`,
+                    `Vidas: ${state.lives}/10`,
                     '',
                     'Respostas corretas:',
                     ...state.logs,
@@ -652,11 +653,13 @@
                         
                         // MODIFICADO: Verifica se o jogador está caindo sobre o inimigo (para matá-lo)
                         if (player.vy > 0 && player.y + player.h - player.vy <= enemy.y) {
-                            // Player pulou em cima do inimigo - mata o inimigo
-                            enemy.active = false;
-                            player.vy = -player.jump * 0.7; // Pequeno salto ao matar
-                            state.score += 20; // Pontuação por matar inimigo
-                        } else {
+                       // Player pulou em cima do inimigo - mata o inimigo
+                       enemy.active = false;
+                       player.vy = -player.jump * 0.7; // Pequeno salto ao matar
+                       state.score += 20; // Pontuação por matar inimigo
+                       state.killedEnemies++; // 👈 soma +1 inimigo derrotado
+                       }
+                        else {
                             // Player hurt - lose one life per enemy
                             state.lives--;
                             updateHUD();
